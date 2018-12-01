@@ -1,157 +1,168 @@
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:sergey/utils/correctWrong.dart';
+import 'package:html_unescape/html_unescape.dart';
 
-import 'dart:async';
 import 'dart:convert';
 
+String question = "Who of the anime naruto the strongest?";
+List arrAnswer = ["Saske", "Naruto", "Itachi", "Madara"];
+String correctAnswer = "Sacura";
+List data;
+String url =
+    'https://opentdb.com/api.php?amount=1&difficulty=easy&type=multiple';
 
+fetch(String url) async {
+  var unescape = new HtmlUnescape();
 
+  final JsonDecoder _decoder = new JsonDecoder();
+  var clientHttp = new Client();
+  var response = await clientHttp.get(url);
 
-class Quiz1 extends StatefulWidget {
-  @override
-  Quiz1State createState() => new Quiz1State();
+  final String jsonBody = response.body;
+  final statusCode = response.statusCode;
+
+  if (statusCode < 200 || statusCode >= 300 || jsonBody == null) {
+    throw Exception('Failed to load post');
+  }
+
+  final recipesContainer = _decoder.convert(jsonBody);
+
+  final List data = recipesContainer['results'];
+
+  print(recipesContainer);
+  print(data);
+
+  question = unescape.convert(data[0]["question"]);
+  correctAnswer = data[0]["correct_answer"];
+  arrAnswer = data[0]["incorrect_answers"];
+  arrAnswer.add(correctAnswer);
+  arrAnswer.sort();
 }
 
+class QuizPage extends StatefulWidget {
+  @override
+  QuizState createState() => new QuizState();
+}
 
-class Quiz1State extends State<Quiz1> {
+class QuizState extends State<QuizPage> {
+  String questionText;
+  int questionNumber;
+  bool isCorrect;
+  bool overlayShouldBeVisible = false;
 
-  String question = "";
-  List arrAnswer = ["","","",""];
-  String correctAnswer = "";
-  List data;
-  String url = 'https://opentdb.com/api.php?amount=1&difficulty=easy&type=multiple';
-
- 
-  Future<String> makeRequest() async {
-    var response = await http
-        .get(Uri.encodeFull(url), headers: {"Accept": "application/json"});
- 
- 
-    var extractdata = json.decode(response.body);
-    data = extractdata["results"];
-    question = data[0]["question"];
-    correctAnswer = data[0]["correct_answer"];
-    arrAnswer = data[0]["incorrect_answers"];
-    arrAnswer.add(correctAnswer);
-    arrAnswer.sort();
-  } 
+  void handleAnswer(bool answer) {
+    isCorrect = answer;
+    this.setState(() {
+      overlayShouldBeVisible = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-      double cWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
-          appBar: new AppBar(
-            title: new Text("Quiz"),
+    double cWidth = MediaQuery.of(context).size.width;
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        new ListView(
+          children: <Widget>[
+            new Padding(padding: EdgeInsets.all(8.0)),
+            new Text(
+              question,
+              style: new TextStyle(fontSize: 22.0),
             ),
-            
-
-          body: new Container(
-            margin: const EdgeInsets.all(10.0),
-            alignment: Alignment.topCenter,
-            child: new Column(
-              
+            new Image.asset('assets/cat.png'),
+            new Padding(padding: EdgeInsets.all(10.0)),
+            new Column(
               children: <Widget>[
-                 new FloatingActionButton(
-                      onPressed:() {
-                        setState(() {
-                         makeRequest();          
-                        });
-                      },
-                      child: new Icon(Icons.skip_next),
+                new MaterialButton(
+                  minWidth: cWidth,
+                  color: Colors.green,
+                  onPressed: () {
+                    setState(() async {
+                      if (correctAnswer == arrAnswer[0]) {
+                        await fetch(url);
+                        handleAnswer(true);
+                      } else {
+                        await fetch(url);
+                        handleAnswer(false);
+                      }
+                    });
+                  },
+                  child: new Text(
+                    arrAnswer[0],
+                    style: new TextStyle(fontSize: 20.0, color: Colors.white),
                   ),
-
-                new Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-
-                      new Text(question,
-                        style: new TextStyle(
-                            fontSize: 22.0
-                        ),),
-                    ],
+                ),
+                new MaterialButton(
+                  minWidth: cWidth,
+                  color: Colors.green,
+                  onPressed: () {
+                    setState(() async {
+                      if (correctAnswer == arrAnswer[1]) {
+                        await fetch(url);
+                        handleAnswer(true);
+                      } else {
+                        await fetch(url);
+                        handleAnswer(false);
+                      }
+                    });
+                  },
+                  child: new Text(
+                    arrAnswer[1],
+                    style: new TextStyle(fontSize: 20.0, color: Colors.white),
                   ),
-                
-
-
-                //image
-                new Padding(padding: EdgeInsets.all(10.0)),
-                new Padding(padding: EdgeInsets.all(10.0)),
-
-                new Text(">><<",
-                  style: new TextStyle(
-                    fontSize: 20.0,
-                  ),),
-
-
-                new Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-
-                  children: <Widget>[
-
-                    //button 1
-                    new MaterialButton(
-                      minWidth:cWidth,
-                      color: Colors.blueGrey,
-                      onPressed: (){
-                        //TODO
-                      },
-                      child: new Text(arrAnswer[0],
-                        style: new TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.white
-                        ),),
-                    ),
-
-                    //button 2
-                    new MaterialButton(
-                      minWidth: cWidth,
-                      color: Colors.blueGrey,
-                      onPressed: (){
-                        //TODO
-                      },
-                      child: new Text(arrAnswer[1],
-                        style: new TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.white
-                        ),),
-                    ),
-
-                    //button 3
-                    new MaterialButton(
-                      minWidth: cWidth,
-                      color: Colors.blueGrey,
-                      onPressed: (){
-                        //TODO
-                      },
-                      child: new Text(arrAnswer[2],
-                        style: new TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.white
-                        ),),
-                    ),
-
-                    //button 4
-                    new MaterialButton(
-                      minWidth: cWidth,
-                      color: Colors.blueGrey,
-                      onPressed: (){
-                        //TODO
-                      },
-                      child: new Text(arrAnswer[3],
-                        style: new TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.white
-                        ),),
-                    ),
-
-                  ],
+                ),
+                new MaterialButton(
+                  minWidth: cWidth,
+                  color: Colors.green,
+                  onPressed: () {
+                    setState(() async {
+                      if (correctAnswer == arrAnswer[2]) {
+                        await fetch(url);
+                        handleAnswer(true);
+                      } else {
+                        await fetch(url);
+                        handleAnswer(false);
+                      }
+                    });
+                  },
+                  child: new Text(
+                    arrAnswer[2],
+                    style: new TextStyle(fontSize: 20.0, color: Colors.white),
+                  ),
+                ),
+                new MaterialButton(
+                  minWidth: cWidth,
+                  color: Colors.green,
+                  onPressed: () {
+                    setState(() async {
+                      if (correctAnswer == arrAnswer[3]) {
+                        await fetch(url);
+                        handleAnswer(true);
+                      } else {
+                        await fetch(url);
+                        handleAnswer(false);
+                      }
+                    });
+                  },
+                  child: new Text(
+                    arrAnswer[3],
+                    style: new TextStyle(fontSize: 20.0, color: Colors.white),
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
+        ),
+        overlayShouldBeVisible == true
+            ? new CorrectWrongOverlay(isCorrect, () {
+                this.setState(() {
+                  overlayShouldBeVisible = false;
+                });
+              })
+            : new Container(),
+      ],
     );
   }
 }
